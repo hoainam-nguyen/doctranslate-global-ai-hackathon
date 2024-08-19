@@ -1,0 +1,12 @@
+version: "3"
+
+services:
+  production-hackathon-fe:
+    container_name: hackathon-fe-service
+    image: hackathon-fe-service
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - 3000:3000
+    restart: always

@@ -1,0 +1,9 @@
+fastapi
+starlette
+loguru
+python-dotenv~=1.0.0
+python-multipart~=0.0.6
+requests
+gunicorn
+uvicorn
+openai==1.2.0

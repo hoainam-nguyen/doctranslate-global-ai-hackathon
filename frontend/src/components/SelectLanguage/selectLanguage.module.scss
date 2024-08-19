@@ -1,0 +1,24 @@
+.btn_select {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: white;
+  padding: 12px 1rem;
+  border-radius: 6px;
+  border: 1px solid #dbe0e8;
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: normal;
+}
+
+.search_input::placeholder {
+  overflow: hidden;
+  color: #919191;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 14px;
+  font-style: italic;
+  font-weight: 300;
+  line-height: normal;
+}

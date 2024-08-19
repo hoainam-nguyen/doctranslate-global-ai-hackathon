@@ -1,0 +1,82 @@
+variables:
+  CONTAINER_IMAGE: registry.gitlab.com/thinkprompt/doctranslator/internaltool/$CI_PROJECT_NAME
+  STABLE_IMAGE_TAG: $CI_COMMIT_REF_SLUG-latest-stable
+  ARCHIVE_IMAGE_TAG: $CI_COMMIT_REF_SLUG-$CI_COMMIT_SHA
+  SLEEP_WHEN_START_CONTAINER: 60
+
+stages: # List of stages for jobs, and their order of execution
+  - dev
+  - build
+  - test
+  - deploy
+
+before_script:
+  - docker info
+  - docker --version
+  - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN $CI_REGISTRY
+  - echo $USER
+  - echo $(id -u)
+  - echo $(id -g)
+
+
+BUILDER-JOB: # This job runs in the build stage, which runs first.
+  variables:
+    STABLE_IMAGE_NAME: $CONTAINER_IMAGE:$STABLE_IMAGE_TAG
+    IMAGE_NAME: $CONTAINER_IMAGE:$ARCHIVE_IMAGE_TAG
+    CONTAINER_NAME: hakathon-fe-service
+  stage: build
+  tags:
+    - HACKATHON-SERVER
+  only:
+    - main
+  script:
+    - rm -rf .git
+    - rm -rf .gitlab-ci.yml
+    - rm -rf .gitattributes
+    # Build and up container
+    - echo "Building the image $IMAGE_NAME ...."
+    - CURRENT_UID=$(id -u):$(id -g) docker compose build --force-rm
+    - sleep $SLEEP_WHEN_START_CONTAINER
+
+    # Push Archive by commit tag
+    - docker push $IMAGE_NAME
+
+    # Push stable production
+    - docker tag $IMAGE_NAME $CONTAINER_IMAGE:$STABLE_IMAGE_TAG
+    - docker push $CONTAINER_IMAGE:$STABLE_IMAGE_TAG
+
+    - docker rmi $(docker images -qf dangling=true) || true
+    - echo "Build complete."
+
+  when: on_success
+
+
+
+################################################################################################################
+# Stable Main
+################################################################################################################
+
+DEPLOY-JOB:
+  variables:
+    IMAGE_NAME: $CONTAINER_IMAGE:$ARCHIVE_IMAGE_TAG
+    CONTAINER_NAME: hackathon-fe-service
+  stage: deploy
+  tags:
+    - HACKATHON-SERVER
+  only:
+    - main
+  script:
+    - rm -rf .git
+    - rm -rf .gitlab-ci.yml
+    - rm -rf .gitattributes
+
+    - echo "Build container $CONTAINER_NAME from $IMAGE_NAME for testing ..."
+    - docker pull $IMAGE_NAME
+
+    - CURRENT_UID=$(id -u):$(id -g) docker compose up -d --remove-orphans
+    - sleep $SLEEP_WHEN_START_CONTAINER
+
+    - docker logs $CONTAINER_NAME
+    - docker rmi $(docker images -qf dangling=true) || true
+
+  when: manual

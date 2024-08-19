@@ -1,0 +1,22 @@
+version: "3"
+
+services:
+  hackathon-be-service:
+    build:
+      context: .
+      dockerfile: ${PWD}/Dockerfile-backend
+    container_name: hackathon-backend
+    image: hackathon-backend
+    working_dir: /app
+    entrypoint: ["gunicorn", "server:app",'--workers', '1','--timeout', '1800', '--worker-class', 'uvicorn.workers.UvicornWorker', '--bind', '0.0.0.0:9000']
+    restart: always
+    network_mode: "host"
+
+  hackathon-frontend-service:
+    container_name: hackathon-frontend
+    image: hackathon-frontend
+    build:
+      context: .
+      dockerfile: ${PWD}/Dockerfile-frontend
+    restart: always
+    network_mode: "host"

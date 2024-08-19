@@ -1,0 +1,17 @@
+FROM python:3.9-slim
+
+RUN ln -snf /usr/share/zoneinfo/Asia/Ho_Chi_Minh /etc/localtime && echo Asia/Ho_Chi_Minh > /etc/timezone
+
+ENV PYTHONDONTWRITEBYTECODE=1
+
+ENV PYTHONUNBUFFERED=1
+
+RUN apt-get update
+RUN apt-get install libmagic1 -y
+RUN python -m pip install pip setuptools wheel
+COPY ./backend/. /app
+WORKDIR /app
+
+RUN pip install -r requirements.txt
+
+CMD ["/bin/bash"]
